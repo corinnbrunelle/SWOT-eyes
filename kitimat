@@ -3,3 +3,153 @@
 
 @author: cbourgaultbrunelle
 """
+
+#!/usr/bin/env python
+
+# This script shows selected netCDF file attributes
+
+#. r.load.dot eccc/mrd/rpn/MIG/ENV/rpnpy/2.1-u2.5  main/opt/intelcomp/inteloneapi-2022.1.2/intelcomp+mpi+mkl
+#. ssmuse-sh -p /fs/ssm/eccc/cmd/cmds/env/python/py39_2022.04.14_rhel-8-icelake-64
+from osgeo import gdal
+import geopandas as gpd 
+from netCDF4 import Dataset
+#import cmocean
+import os
+import numpy as np
+import matplotlib as mpl
+#--------------------------------------------------------------------------------
+##################################################
+def plot_globalDataScatter(lons, lats, data, title, cbar_min, cbar_max, \
+                    lon_min, lon_max, lat_min, lat_max, cmap, \
+                    outputFilename, saveFigure, plotZebre):
+
+  import matplotlib.pyplot as plt
+  import cartopy.feature as cfeature
+  import cartopy
+  import matplotlib as mpl
+  import cartopy.crs as ccrs
+  from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+  import cartopy.feature as cfeature
+  
+  fontsize = 16
+ 
+  # Plot figure
+  fig = plt.figure(figsize=(15,8))
+  projection=ccrs.PlateCarree()
+  crs=projection
+
+  ax = fig.add_subplot(projection=projection)
+  ax.set_extent([lon_min, lon_max, lat_min, lat_max])
+
+  norm = mpl.colors.Normalize(vmin = cbar_min, vmax = cbar_max)
+  plot = ax.scatter(lons, lats, c = data, s = 0.4, marker = "o", edgecolors='none', transform = projection, \
+                       cmap = cmap, norm = norm, \
+                       zorder = 1, rasterized = False)
+
+  #ax.coastlines(resolution='10m')
+
+  # resol = '10m'
+  # lakes = cartopy.feature.NaturalEarthFeature('physical', 'lakes','10m', \
+  #           edgecolor='black', facecolor="None")
+  
+  # ax.add_feature(lakes)
+  
+  # resol = '10m'
+  # coasts = cartopy.feature.NaturalEarthFeature('physical', 'coasts','10m', \
+  #           edgecolor='black', facecolor="None")
+  
+  # ax.add_feature(coasts)
+  
+  # rivers = cartopy.feature.NaturalEarthFeature(category='physical', name='rivers_lake_centerlines',
+  #     scale='10m', facecolor='none', edgecolor='black')
+
+
+  ax.grid(False) 
+  ax.set_facecolor("none")
+  #gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels = False, linewidth = 1., \
+  #                  color = 'none', alpha = 1, linestyle = '-', zorder = 3)
+  #gl = ax.gridlines(crs=ccrs.PlateCarree())
+   
+  #gl.xlabels_top = False
+  #gl.ylabels_left = False
+  #gl.xformatter = LONGITUDE_FORMATTER
+  #gl.yformatter = LATITUDE_FORMATTER
+  #gl.xlabel_style = {'size': fontsize}
+  #gl.ylabel_style = {'size': fontsize}
+
+ 
+  
+  ax.set_title(title, fontsize = fontsize)
+  
+  
+  # Colorbar
+  cbar = plt.colorbar(plot, ax = ax, extend = 'both',spacing = 'uniform', \
+                  orientation = 'horizontal', pad = 0.1, shrink = 0.6 )
+  cbar.ax.tick_params(labelsize = fontsize)
+  cbar.set_label('m')
+  fig.tight_layout()
+  
+  if saveFigure:
+    fig.savefig(outputFilename, format='png', dpi = 300., transparent=True)
+  else:
+    plt.show()
+    
+
+##################################################
+
+
+#inputFile="/home/ses002/data_maestro/ppp6/SWOT_L2_LR_SSH_Basic_014_214_20240425T015803_20240425T024848_PIC0_01.nc"
+#inputFile="/home/ses002/data_maestro/ppp6/SWOT_L1B_HR_SLC_014_214_207L_20240425T023225_20240425T023235_PIC0_01.nc"
+#inputFile="/home/ses002/data_maestro/ppp6/SWOTstuff/SWOT_L2_HR_Raster_100m_UTM22J_N_x_x_x_014_214_104F_20240425T023224_20240425T023245_PIC0_01.nc"
+
+#bons:
+#inputFile=r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Bresil\bons\SWOT_L2_HR_Raster_100m_UTM22J_N_x_x_x_014_214_104F_20240425T023224_20240425T023245_PIC0_01.nc"
+#inputFile=r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Bresil\apres\SWOT_L2_HR_Raster_100m_UTM22J_N_x_x_x_014_533_051F_20240506T114623_20240506T114644_PIC0_01.nc"
+inputFile=r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Kitimat\SWOT_L2_HR_Raster_250m_UTM09U_N_x_x_x_018_580_030F_20240730T145739_20240730T145800_PIC0_01.nc"
+
+# Output plot file name
+#outputPlotFile="/home/ses002/data_maestro/ppp6/SWOT_oneday.png"
+#outputPlotFile=r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Bresil\bons\SWOT_L2_LR_SSH_Basic_014_214_20240425T015803_20240425T024848_PIC0_01_V2.jpg"
+outputPlotFile=r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Kitimat\SWOT_L2_HR_Raster_250m_UTM09U_N_x_x_x_018_580_030F_20240730T145739_20240730T145800_PIC0_01.png"
+
+data_local = Dataset(inputFile, 'r')
+data = data_local['wse'][:]
+lon  = data_local['longitude'][:]
+lat  = data_local['latitude'][:]
+ 
+
+data[data > 6] = np.nan
+data[data < 0] = np.nan
+
+print(data.min(), data.max(), data.shape)
+
+
+##########################################################################
+plot = True
+
+if plot: 
+  print("Generating plot...")
+  cmap=mpl.colormaps['jet']
+  #cmap = cmocean.cm.diff
+  title = "SWOT wse from SWOT_L2_HR_Raster_100m 20240506"
+  lon_min = -130.5
+  lon_max = -127.5
+  lat_min = 52.0
+  lat_max = 54.5
+  cbar_min = 0. 
+  cbar_max = 6.
+  plot_globalDataScatter(lon, lat, data, \
+                         title, \
+                         cbar_min = cbar_min, cbar_max = cbar_max, \
+                         lon_min = lon_min, \
+                         lon_max = lon_max, \
+                         lat_min = lat_min, \
+                         lat_max = lat_max, \
+                         cmap = cmap, \
+                         outputFilename = outputPlotFile, \
+                         saveFigure = True, \
+                         plotZebre = False)
+    
+
+
+##########################################################################
