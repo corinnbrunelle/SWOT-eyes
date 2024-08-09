@@ -42,7 +42,7 @@ def plot_globalDataScatter(lons, lats, data, title, cbar_min, cbar_max, \
   ax.set_extent([lon_min, lon_max, lat_min, lat_max])
 
   norm = mpl.colors.Normalize(vmin = cbar_min, vmax = cbar_max)
-  plot = ax.scatter(lons, lats, c = data, s = 0.4, marker = "o", edgecolors='none', transform = projection, \
+  plot = ax.scatter(lons, lats, c = data, s = 2, marker = "o", edgecolors='none', transform = projection, \
                        cmap = cmap, norm = norm, \
                        zorder = 1, rasterized = False)
 
@@ -131,11 +131,11 @@ if plot:
   print("Generating plot...")
   cmap=mpl.colormaps['jet']
   #cmap = cmocean.cm.diff
-  title = "SWOT water surafce elevation (m) from SWOT_L2_HR_Raster_250m 20240730 14:57:39 - 14:58:00 "
-  lon_min = -130.5
-  lon_max = -127.5
-  lat_min = 52.0
-  lat_max = 54.5
+  title = "SWOT water surface elevation (m) from SWOT_L2_HR_Raster_250m 20240730 14:57:39 - 14:58:00 "
+  lon_min = -129.5
+  lon_max = -128.5
+  lat_min = 53.0
+  lat_max = 54.0
   cbar_min = 0. 
   cbar_max = 1.
   plot_globalDataScatter(lon, lat, data, \
