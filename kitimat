@@ -8,8 +8,7 @@
 
 # This script shows selected netCDF file attributes
 
-#. r.load.dot eccc/mrd/rpn/MIG/ENV/rpnpy/2.1-u2.5  main/opt/intelcomp/inteloneapi-2022.1.2/intelcomp+mpi+mkl
-#. ssmuse-sh -p /fs/ssm/eccc/cmd/cmds/env/python/py39_2022.04.14_rhel-8-icelake-64
+
 from osgeo import gdal
 import geopandas as gpd 
 from netCDF4 import Dataset
@@ -98,18 +97,10 @@ def plot_globalDataScatter(lons, lats, data, title, cbar_min, cbar_max, \
 ##################################################
 
 
-#inputFile="/home/ses002/data_maestro/ppp6/SWOT_L2_LR_SSH_Basic_014_214_20240425T015803_20240425T024848_PIC0_01.nc"
-#inputFile="/home/ses002/data_maestro/ppp6/SWOT_L1B_HR_SLC_014_214_207L_20240425T023225_20240425T023235_PIC0_01.nc"
-#inputFile="/home/ses002/data_maestro/ppp6/SWOTstuff/SWOT_L2_HR_Raster_100m_UTM22J_N_x_x_x_014_214_104F_20240425T023224_20240425T023245_PIC0_01.nc"
-
-#bons:
-#inputFile=r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Bresil\bons\SWOT_L2_HR_Raster_100m_UTM22J_N_x_x_x_014_214_104F_20240425T023224_20240425T023245_PIC0_01.nc"
-#inputFile=r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Bresil\apres\SWOT_L2_HR_Raster_100m_UTM22J_N_x_x_x_014_533_051F_20240506T114623_20240506T114644_PIC0_01.nc"
+# Input file name
 inputFile=r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Kitimat\SWOT_L2_HR_Raster_250m_UTM09U_N_x_x_x_018_580_030F_20240730T145739_20240730T145800_PIC0_01.nc"
 
 # Output plot file name
-#outputPlotFile="/home/ses002/data_maestro/ppp6/SWOT_oneday.png"
-#outputPlotFile=r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Bresil\bons\SWOT_L2_LR_SSH_Basic_014_214_20240425T015803_20240425T024848_PIC0_01_V2.jpg"
 outputPlotFile=r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Kitimat\SWOT_L2_HR_Raster_250m_UTM09U_N_x_x_x_018_580_030F_20240730T145739_20240730T145800_PIC0_01.png"
 
 data_local = Dataset(inputFile, 'r')
