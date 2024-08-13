@@ -1,0 +1,190 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Apr 18 11:05:01 2024
+conda activate netcdf_test
+@author: sergey skachko
+"""
+
+#!/usr/bin/env python
+
+# This script shows selected netCDF file attributes
+
+#. r.load.dot eccc/mrd/rpn/MIG/ENV/rpnpy/2.1-u2.5  main/opt/intelcomp/inteloneapi-2022.1.2/intelcomp+mpi+mkl
+#. ssmuse-sh -p /fs/ssm/eccc/cmd/cmds/env/python/py39_2022.04.14_rhel-8-icelake-64
+
+from netCDF4 import Dataset
+#import              utilitiesIO, utilitiesPlot
+#import cmocean
+
+import netCDF4 
+from netCDF4 import Dataset
+import numpy as np
+import matplotlib
+import pandas
+import scipy
+import h5netcdf
+import xarray 
+import requests
+import matplotlib.pyplot as plt
+import sys
+sys.path.append(r'C:\Users\cbourgaultbrunelle\Documents\Python Scripts\Martha')
+
+import swot_ssh_utils as swot
+
+
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+
+ciopsEFile=r"C:\Users\cbourgaultbrunelle\Documents\SWOT\test_CIOPSE_SWOT\2023090712_003_2D_latlon.nc"
+swotFile=r"C:\Users\cbourgaultbrunelle\Documents\SWOT\test_CIOPSE_SWOT\SWOT_L3_LR_SSH_Basic_003_186_20230907T134140_20230907T143307_v0.3.nc"
+
+# Output plot file name
+outputPlotFile=r"C:\Users\cbourgaultbrunelle\Documents\SWOT\test_CIOPSE_SWOT\output\new_2023090712_003_2D_latlon.pdf"
+
+
+#######################################################################
+# source grid
+#######################################################################
+source = Dataset(ciopsEFile, 'r')
+lon = source['longitude'][:]
+lat = source['latitude'][:]
+
+print("lat: ", lat.shape)
+print("lon: ", lon.shape)
+
+data = source['sossheig'][0,:,:]
+
+source.close()
+
+
+data_local = Dataset(swotFile, 'r')
+ssha       = data_local['ssha'][:]
+ssha       = data_local['ssha'][:]
+mdt        = data_local['mdt'][:]
+lon_swot   = data_local['longitude'][:]
+lat_swot   = data_local['latitude'][:]
+data_local.close()
+
+print("ssha: ", ssha.min(), ssha.max())
+print("mdt: ", mdt.min(), mdt.max())
+
+ssh = ssha + mdt
+
+print("ssh: ", ssh.min(), ssh.max())
+print("data: ", data.shape, data.min(), data.max())
+
+lon_min = lon.min()
+lon_max = lon.max()
+lat_min = lat.min()
+lat_max = lat.max()
+
+print(lon_min, lon_max, lat_min, lat_max)
+
+
+##########################################################################
+#plot = True
+#if plot: 
+#  print("Generating plot...")
+  #cmap=mpl.colormaps['bwr']
+cmap = plt.get_cmap('bwr')#cmocean.cm.balance
+#map = plt.get_cmap('Grays')#cmocean.cm.balance
+title = "CIOPS-E 2h forecast: SSH. 2024020715"
+  
+  #utilitiesPlot.plot_ciopsVSswot(lon, lat, data, ssh, lon_swot, lat_swot,\
+  #plot_ciopsVSswot(lon, lat, data, ssh, lon_swot, lat_swot,\
+#                                title, \
+#                                cbar_min = -1.5, cbar_max = 1.5, \
+#                                lon_min = lon_min, \
+#                                lon_max = lon_max, \
+#                                lat_min = lat_min, \
+#                                lat_max = lat_max, \
+#                                cmap = cmap, \
+#                                outputFilename = outputPlotFile, \
+#                                saveFigure = True, \
+#                                plotZebre = False)
+
+
+##################################################
+def plot_ciopsVSswot(lons, lats, data, ssh, lon_ssh, lat_ssh, title, cbar_min, cbar_max, \
+                    lon_min, lon_max, lat_min, lat_max, cmap, \
+                    outputFilename, saveFigure, plotZebre):
+
+  import matplotlib.pyplot as plt
+  import cartopy.feature as cfeature
+  import cartopy
+  import matplotlib as mpl
+  import cartopy.crs as ccrs
+  from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+  
+  fontsize = 16
+
+  #if lon_min == -180. and lon_max == 180.:
+  #  data, lons, lats = add_cyclic(data, x = lons, y = lats)
+
+  #print("plot_globalData: ", lons.shape, lats.shape, data.shape)
+  #print("data: ", data.min(), data.max())
+  # Plot figure
+  fig = plt.figure(figsize=(15,8))
+  projection=ccrs.PlateCarree()
+  crs=projection
+
+  ax = fig.add_subplot(projection=projection)
+  ax.set_extent([lon_min, lon_max, lat_min, lat_max])
+
+  norm = mpl.colors.Normalize(vmin = cbar_min, vmax = cbar_max)
+  plot = ax.pcolormesh(lons, lats, data, transform = projection, \
+                       cmap = cmap, norm = norm, \
+                       zorder = 1, rasterized = True)
+  plot = ax.scatter(lon_ssh, lat_ssh, c = ssh, s = 0.1, transform = projection, \
+                    cmap = cmap, norm = norm, \
+                    zorder = 1, rasterized = True)
+
+
+  ax.coastlines()
+
+  resol = '110m'
+  lakes = cartopy.feature.NaturalEarthFeature('physical', 'lakes', \
+          scale = resol, edgecolor='black', facecolor="None")
+  ax.add_feature(lakes)
+
+  ax.add_feature(cartopy.feature.LAND, facecolor='gray', \
+                  edgecolor = 'black', zorder = 1, alpha = 1.0)
+  
+  #ax.add_feature(cartopy.feature.LAND, edgecolor='black', \
+  #               facecolor = 'gray', zorder = 1, alpha = 1.)
+                 #facecolor = 'gray', zorder = 1, alpha = 0.5)
+  
+  gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels = True, linewidth = 1., \
+                    color = 'gray', alpha = 1, linestyle = '-', zorder = 3)
+                                    
+  gl.xlabels_top = False
+  gl.ylabels_left = False
+  gl.xformatter = LONGITUDE_FORMATTER
+  gl.yformatter = LATITUDE_FORMATTER
+  gl.xlabel_style = {'size': fontsize}
+  gl.ylabel_style = {'size': fontsize}
+
+  if plotZebre:
+    add_zebra_frame(ax, crs = crs, \
+                    lon_min = lon_min, \
+                    lon_max = lon_max, \
+                    lat_min = lat_min, \
+                    lat_max = lat_max)
+  
+  ax.set_title(title, fontsize = fontsize)
+  
+  # Colorbar
+  cbar = plt.colorbar(plot, ax = ax, extend = 'both',spacing = 'uniform', \
+                              orientation = 'horizontal', pad = 0.1, shrink = 0.6 )
+  cbar.ax.tick_params(labelsize = fontsize)
+  #cbar.ax.set_xlabel('$^\circ C$')
+  fig.tight_layout()
+  
+  if saveFigure:
+    fig.savefig(outputFilename, dpi = 300., format = 'pdf')
+  else:
+    plt.show()
+
+
+plot_ciopsVSswot(lon, lat, data, ssh, lon_swot, lat_swot, title, cbar_min = -1.5, cbar_max = 1.5, lon_min = lon_min, lon_max = lon_max, lat_min = lat_min, lat_max = lat_max, cmap = cmap, outputFilename = outputPlotFile, saveFigure = True, plotZebre = False)
+##################################################
