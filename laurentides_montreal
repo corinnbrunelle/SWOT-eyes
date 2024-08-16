@@ -1,0 +1,169 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Aug 15 16:30:04 2024
+
+@author: cbourgaultbrunelle
+"""
+
+#!/usr/bin/env python
+
+import xarray
+import sys
+from pykml.factory import KML_ElementMaker as kml
+#import cmocean
+import os
+import numpy as np
+import matplotlib as mpl
+import struct
+import simplekml
+
+def float_to_bytes(value):
+    return struct.pack('d', value)
+
+##################################################
+def plot_globalDataScatter(lons, lats, data, title, cbar_min, cbar_max, \
+                    lon_min, lon_max, lat_min, lat_max, cmap, \
+                    outputFilename, saveFigure, plotZebre):
+
+  import matplotlib.pyplot as plt
+  import cartopy.feature as cfeature
+  import cartopy
+  import matplotlib as mpl
+  import cartopy.crs as ccrs
+  from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+  import cartopy.feature as cfeature
+  
+  fontsize = 16
+ # os.environ["CARTOPY_USER_BACKGROUNDS"] = '/home/ses002/data_maestro/ppp6/archive/pytools/cartopy/'
+  # Plot figure
+  fig = plt.figure(figsize=(15,8))
+  projection=ccrs.PlateCarree()
+  crs=projection
+
+  ax = fig.add_subplot(projection=projection)
+  ax.set_extent([lon_min, lon_max, lat_min, lat_max])
+  
+  land = cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor='face', facecolor='gray')
+  #ax.add_feature(land)
+  
+  norm = mpl.colors.Normalize(vmin = cbar_min, vmax = cbar_max)
+  plot = ax.scatter(lons, lats, c = data, s = 0.05, marker = "o", edgecolors='none', transform = projection, \
+                       cmap = cmap, norm = norm, \
+                       zorder = 1, rasterized = False)
+
+ 
+  ax.grid(False) 
+  ax.set_facecolor("none")
+  
+  ax.set_title(title, fontsize = fontsize)
+  #ax.background_img(name='BM', resolution='high')
+  
+  # Colorbar
+  cbar = plt.colorbar(plot, ax = ax, extend = 'both',spacing = 'uniform', \
+                  orientation = 'horizontal', pad = 0.5, shrink = 0.6 )
+  cbar.ax.tick_params(labelsize = fontsize)
+  cbar.set_label('m')
+  fig.tight_layout()
+  
+  if saveFigure:
+    fig.savefig(outputFilename, format='png', dpi = 1200., transparent=True)
+  else:
+    plt.show()
+
+def main():
+
+  print ('Starting script SWOT_using_dataFrame.py...')
+  
+  #inputFile = inputFile=r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Ouragan Debby\Canton_de_Est\SWOT_L2_HR_Raster_100m_UTM19T_N_x_x_x_019_270_037F_20240809T095629_20240809T095650_PIC0_01.nc" #sys.argv[1] # input file
+  inputFile = inputFile=r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Ouragan Debby\Laurentide_Montreal\SWOT_L2_HR_Raster_100m_UTM18T_N_x_x_x_019_298_037F_20240810T095700_20240810T095721_PIC0_01.nc" #sys.argv[1] # input file
+
+  dataSet   = xarray.open_dataset(inputFile)
+  dataFrame = dataSet.to_dataframe()
+  
+  print('dataFrame columns: ')
+  print('******************')
+  
+  for columnIndex in range(dataFrame.shape[1]):
+    print(columnIndex, dataFrame.columns[columnIndex])
+  
+  print('******************')
+
+  uniqueFlagValues = dataFrame['wse_qual'].unique()
+  print('unique flag values: ', uniqueFlagValues)
+  
+  dataFrameWithQualityDataOnly = dataFrame[dataFrame['wse_qual'] == 0] #<=
+  print(dataFrameWithQualityDataOnly.shape)
+  
+  df=dataFrameWithQualityDataOnly[['longitude', 'latitude', 'wse', 'wse_qual']]
+  ###CREATING A DICTIONARY OF DATAFRAMES (ONE FOR EACH DISTRICT) 
+  dict_dataframes=dict(tuple(df.groupby('wse_qual')))
+  
+  ###CALLING EACH DATAFRAME FROM THE DICTIONARY
+  #for name, df in dict_dataframes.items():
+  
+    ###CREATING A LIST OF TUPLES WITH THE COLUMNS OF THE DATAFRAME
+   # tuples = [tuple(x) for x in df.values]
+
+    #altitudemode = simplekml.AltitudeMode.relativetoground
+    
+    #extrude=1
+    
+    #print(simplekml)
+
+    #pol = simplekml.newpolygon(name = name, description = name, outerboundaryis = tuples, extrude = extrude, altitudemode = altitudemode)
+    #pol.style.linestyle.color = simplekml.Color.honeydew
+    #pol.style.linestyle.width = 3
+    #pol.style.polystyle.color = simplekml.Color.changealphaint(100, simplekml.Color.navy)
+
+
+  ###SAVING THE FILE 
+  #outputKMLFile = r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Ouragan Debby\output.kml"   
+  #simplekml.save(outputKMLFile)
+  #exit()
+  
+  lon  = dataFrameWithQualityDataOnly['longitude'].to_numpy()
+  lat  = dataFrameWithQualityDataOnly['latitude'].to_numpy()
+  data = dataFrameWithQualityDataOnly['wse'].to_numpy()
+  
+  print(lon.min(), lon.max(), lon.shape)
+  print(lat.min(), lat.max(), lat.shape)
+  print(data.min(), data.max(), data.shape)
+  
+  #name_object = KML.name("SWOT data")
+  
+  
+  
+  plot = True
+
+  if plot: 
+    print("Generating plot...")
+    #cmap=mpl.colormaps['jet']
+    cmap = mpl.colormaps['Blues']#cmocean.cm.diff
+    title = "SWOT water surface elevation (m) "
+    lon_min = -75.0
+    lon_max = -72.4
+    lat_min = 45.0
+    lat_max = 46.5
+    cbar_min = 0. 
+    cbar_max = 400.
+    #outputPlotFile =r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Ouragan Debby\Canton_de_Est\SWOT_L2_HR_Raster_100m_UTM19T_N_x_x_x_019_270_037F_20240809T095629_20240809T095650_PIC0_01.png"
+    outputPlotFile = r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Ouragan Debby\Laurentide_Montreal\SWOT_L2_HR_Raster_100m_UTM18T_N_x_x_x_019_298_037F_20240810T095700_20240810T095721_PIC0_01.png"
+   
+    plot_globalDataScatter(lon, lat, data, \
+                           title, \
+                           cbar_min = cbar_min, cbar_max = cbar_max, \
+                           lon_min = lon_min, \
+                           lon_max = lon_max, \
+                           lat_min = lat_min, \
+                           lat_max = lat_max, \
+                           cmap = cmap, \
+                           outputFilename = outputPlotFile, \
+                           saveFigure = True, \
+                           plotZebre = False)
+    
+
+
+##########################################################################
+
+if __name__ == "__main__":
+  main()
