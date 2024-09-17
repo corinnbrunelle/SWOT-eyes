@@ -1,0 +1,141 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Aug 15 16:30:04 2024
+1) Clean data with flags
+2) export in csv format
+3) plot the data 
+@author: cbourgaultbrunelle
+"""
+
+#!/usr/bin/env python
+
+
+def main():
+
+
+  import matplotlib.pyplot as plt
+  #import cartopy.feature as cfeature
+  import matplotlib as mpl
+  import cartopy.crs as ccrs
+  import xarray
+
+
+  print ('Starting script SWOT_using_dataFrame.py...')
+  
+  
+  print("Generating plot...")
+  
+
+  #cmap = (mpl.colors.ListedColormap(['steelblue','steelblue3','steelblue2','steelblue1','skyblue2','skyblue1',])
+  #      .with_extremes(under='darkblue', over='lightskyblue'))
+  #bounds = [5, 7.5, 10, 12.5, 15.0, 17.5, 20.0]  
+  #norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
+
+
+  cmap = mpl.colormaps ['Blues_r'] #['nipy_spectral'] #cmocean.cm.diff
+  title = "SWOT water surface elevation (m) "
+  lon_min = -75.3
+  lon_max = -73.15
+  lat_min = 45.0 
+  lat_max = 46.0
+  cbar_min = 3.0 
+  cbar_max = 21.5
+    
+  outputPlotFile = r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Ouragan Debby\Laurentide_Montreal\Montreal_23juillet_SWOT_L2_HR_Raster_total_test.png"
+  outputFile = r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Ouragan Debby\Laurentide_Montreal\Montreal_23juillet_SWOT_L2_HR_Raster_QAQC_test.csv"
+ 
+  inputFile =  r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Ouragan Debby\Laurentide_Montreal\SWOT_L2_HR_Raster_100m_UTM18T_N_x_x_x_018_369_118F_20240723T023143_20240723T023204_PIC0_01.nc" #sys.argv[1] # input file
+  
+
+
+  dataSet   = xarray.open_dataset(inputFile)
+  dataFrame = dataSet.to_dataframe()
+  
+ 
+  
+    
+  print('dataFrame columns: ')
+  print('******************')
+  
+  for columnIndex in range(dataFrame.shape[1]):
+    print(columnIndex, dataFrame.columns[columnIndex])
+  
+  print('******************')
+
+  uniqueFlagValues = dataFrame['wse_qual'].unique()
+  print('unique flag values: ', uniqueFlagValues)
+  
+
+
+
+  
+  dataFrameWithQualityDataOnly = dataFrame[dataFrame['wse_qual'] == 0] #<= 4, 3, 2, 1
+  print(dataFrameWithQualityDataOnly.shape)
+  
+  
+
+
+  #outputDataSet = dataFrameWithQualityDataOnly.to_xarray()
+  #outputDataSet.to_netcdf(outputFile)
+  dataFrameWithQualityDataOnly.to_csv(outputFile)
+  
+  
+
+
+
+  
+  lon  = dataFrameWithQualityDataOnly['longitude'].to_numpy()
+  lat  = dataFrameWithQualityDataOnly['latitude'].to_numpy()
+  data = dataFrameWithQualityDataOnly['wse'].to_numpy()
+  
+  
+  
+  print(lon.min(), lon.max(), lon.shape)
+  print(lat.min(), lat.max(), lat.shape)
+  print(data.min(), data.max(), data.shape)
+  
+  
+  
+  fontsize = 16
+
+  # Plot figure
+  fig = plt.figure(figsize=(15,8))
+  projection=ccrs.PlateCarree()
+  #crs=projection
+
+  ax = fig.add_subplot(projection=projection)
+  ax.set_extent([lon_min, lon_max, lat_min, lat_max])
+  
+  #land = cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor='face', facecolor='gray')
+  #ax.add_feature(land)
+  
+  norm = mpl.colors.Normalize(vmin = cbar_min, vmax = cbar_max)
+  plot = ax.scatter(lon, lat, c = data, s = 0.2, marker = "o", edgecolors='none', transform = projection, \
+                       cmap = cmap, norm = norm, \
+                       zorder = 1, rasterized = False)
+
+    
+
+ 
+  ax.grid(False) 
+  ax.set_facecolor("none")
+  
+  ax.set_title(title, fontsize = fontsize)
+
+  
+  # Colorbar
+  cbar = plt.colorbar(plot, ax = ax, extend = 'both',spacing = 'uniform', \
+                  orientation = 'horizontal', pad = 0.5, shrink = 0.6 )
+  cbar.ax.tick_params(labelsize = fontsize)
+  cbar.set_label('m')
+  fig.tight_layout()
+  
+ 
+  fig.savefig(outputPlotFile, format='png', dpi = 2200., transparent=True)
+ 
+
+  
+##########################################################################
+
+if __name__ == "__main__":
+  main()
