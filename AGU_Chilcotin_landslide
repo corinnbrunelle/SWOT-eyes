@@ -1,0 +1,119 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Aug 15 16:30:04 2024
+
+@author: cbourgaultbrunelle
+"""
+# Liste of input files - Source EarthData NASA :
+    # SWOT_L2_HR_Raster_100m_UTM10U_N_x_x_x_018_067_123F_20240712T073622_20240712T073644_PIC0_01.nc
+    # SWOT_L2_HR_Raster_100m_UTM10U_N_x_x_x_019_067_123F_20240802T042127_20240802T042148_PIC0_01.nc
+    # SWOT_L2_HR_Raster_100m_UTM10U_N_x_x_x_019_373_123F_20240813T024416_20240813T024437_PIC0_01.nc
+
+
+
+def main():
+
+  import numpy as np
+  import matplotlib.pyplot as plt
+  import cartopy.feature as cfeature
+  import matplotlib as mpl
+  import cartopy.crs as ccrs
+  import xarray
+
+
+  print ('Starting script ...')
+  
+  
+  cmap = mpl.colormaps ['jet'] #['nipy_spectral'] #cmocean.cm.diff
+  title = "SWOT water surface elevation (m) "
+  lon_min = -123.1
+  lon_max = -120.2
+  lat_min = 50.8 
+  lat_max = 52.2
+  cbar_min = 540.0 
+  cbar_max = 580.0
+    
+  outputPlotFile = r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Chilcotin\SWOT_L2_HR_Raster_100m_UTM10U_N_x_x_x_019_373_123F_20240813T024416_20240813T024437_PIC0_01.png"
+  
+  outputFile     = r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Chilcotin\SWOT_L2_HR_Raster_100m_UTM10U_N_x_x_x_019_373_123F_20240813T024416_20240813T024437_PIC0_01.csv"
+  
+  inputFile1      = r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Chilcotin\SWOT_L2_HR_Raster_100m_UTM10U_N_x_x_x_019_373_123F_20240813T024416_20240813T024437_PIC0_01.nc "
+    
+    
+  
+  print ('dataSet to dataframe ...')
+
+  dataSet1   = xarray.open_dataset(inputFile1)
+  dataFrame1 = dataSet1.to_dataframe()
+  
+   
+  print('dataFrame columns: ')
+  print('******************')
+  
+  for columnIndex in range(dataFrame1.shape[1]):
+    print(columnIndex, dataFrame1.columns[columnIndex])
+  
+  print('******************')
+
+  uniqueFlagValues = dataFrame1['wse_qual'].unique()
+  print('unique flag values: ', uniqueFlagValues)
+  
+
+  dataFrameWithQualityDataOnly1 = dataFrame1[dataFrame1['wse_qual'] <= 0] #<= 4, 3, 2, 1
+  print(dataFrameWithQualityDataOnly1.shape)
+  
+ 
+  
+  dataFrameWithQualityDataOnlyShort1 = dataFrameWithQualityDataOnly1[['longitude', 'latitude', 'wse']]
+  dataFrameWithQualityDataOnlyShort1.to_csv(outputFile)
+
+
+ 
+  
+  lon1  = dataFrameWithQualityDataOnly1['longitude'].to_numpy()
+  lat1  = dataFrameWithQualityDataOnly1['latitude'].to_numpy()
+  data1 = dataFrameWithQualityDataOnly1['wse'].to_numpy()
+  
+  
+  print("Generating plot...")
+  
+  fontsize = 16
+
+  # Plot figure
+  fig = plt.figure(figsize=(15,8))
+  projection=ccrs.PlateCarree()
+  crs=projection
+
+  ax = fig.add_subplot(projection=projection)
+  ax.set_extent([lon_min, lon_max, lat_min, lat_max])
+  
+ 
+  
+  norm = mpl.colors.Normalize(vmin = cbar_min, vmax = cbar_max)
+  plot = ax.scatter(lon1, lat1, c = data1, s = 0.025, marker = "o", edgecolors='none', transform = projection, \
+                       cmap = cmap, norm = norm, \
+                       zorder = 1, rasterized = False)
+
+ 
+  ax.grid(False) 
+  ax.set_facecolor("none")
+  
+  ax.set_title(title, fontsize = fontsize)
+
+  
+  # Colorbar
+  cbar = plt.colorbar(plot, ax = ax, extend = 'both',spacing = 'uniform', \
+                  orientation = 'horizontal', pad = 0.1) #, shrink = 0.6
+  cbar.ax.tick_params(labelsize = fontsize)
+  cbar.set_label('m')
+  fig.tight_layout()
+  
+ 
+  fig.savefig(outputPlotFile, format='png', dpi = 2200., transparent=True)
+ 
+
+  
+##########################################################################
+
+if __name__ == "__main__":
+  main()
