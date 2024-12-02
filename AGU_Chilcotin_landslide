@@ -6,8 +6,8 @@ Created on Thu Aug 15 16:30:04 2024
 """
 # Liste of input files - Source EarthData NASA :
     # SWOT_L2_HR_Raster_100m_UTM10U_N_x_x_x_018_067_123F_20240712T073622_20240712T073644_PIC0_01.nc
-    # SWOT_L2_HR_Raster_100m_UTM10U_N_x_x_x_019_067_123F_20240802T042127_20240802T042148_PIC0_01.nc
-    # SWOT_L2_HR_Raster_100m_UTM10U_N_x_x_x_019_373_123F_20240813T024416_20240813T024437_PIC0_01.nc
+    # SWOT_L2_HR_Raster_100m_UTM10U_N_x_x_x_019_067_123F_20240802T042127_20240802T042148_PIC0_01.nc /
+    # SWOT_L2_HR_Raster_100m_UTM10U_N_x_x_x_019_373_123F_20240813T024416_20240813T024437_PIC0_01.nc / Flag 1 = best data available
 
 
 
@@ -58,7 +58,7 @@ def main():
   uniqueFlagValues = dataFrame1['wse_qual'].unique()
   print('unique flag values: ', uniqueFlagValues)
   
-
+  # Change the flag as needed
   dataFrameWithQualityDataOnly1 = dataFrame1[dataFrame1['wse_qual'] <= 0] #<= 4, 3, 2, 1
   print(dataFrameWithQualityDataOnly1.shape)
   
