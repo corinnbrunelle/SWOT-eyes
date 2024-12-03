@@ -1,0 +1,135 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Aug 15 16:30:04 2024
+
+@author: cbourgaultbrunelle
+"""
+
+#!/usr/bin/env python
+
+import xarray
+import sys
+from pykml.factory import KML_ElementMaker as kml
+import os
+import numpy as np
+import matplotlib as mpl
+import struct
+import simplekml
+
+
+def main():
+
+
+  import matplotlib.pyplot as plt
+  import cartopy.feature as cfeature
+  import cartopy
+  import matplotlib as mpl
+  import cartopy.crs as ccrs
+  from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+  import cartopy.feature as cfeature  
+
+  print ('Starting script SWOT_using_dataFrame.py...')
+  
+  
+  print("Generating plot...")
+ 
+
+  cmap = mpl.colormaps ['nipy_spectral'] f
+  title = "SWOT water surface elevation (m) "
+  lon_min = -75.3#-75.7#-75.0
+  lon_max = -73.0#-72.7#-72.4
+  lat_min = 45.0 #45.6#45.0
+  lat_max = 46.0#47.7 #46.5
+  cbar_min = 3. 
+  cbar_max = 21.5
+  
+  outputPlotFile = r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Ouragan Debby\Laurentide_Montreal\Montreal_12aout_SWOT_L2_HR_Raster.png"
+   
+  inputFile =  r"C:\Users\cbourgaultbrunelle\Documents\SWOT\Case study\Ouragan Debby\Laurentide_Montreal\SWOT_L2_HR_Raster_100m_UTM18T_N_x_x_x_019_369_118F_20240812T231648_20240812T231709_PIC0_01.nc" #sys.argv[1] # input file
+ 
+
+  dataSet   = xarray.open_dataset(inputFile)
+  dataFrame = dataSet.to_dataframe()
+  
+ 
+    
+  print('dataFrame columns: ')
+  print('******************')
+  
+  for columnIndex in range(dataFrame.shape[1]):
+    print(columnIndex, dataFrame.columns[columnIndex])
+  
+  print('******************')
+
+  uniqueFlagValues = dataFrame['wse_qual'].unique()
+  print('unique flag values: ', uniqueFlagValues)
+  
+
+
+
+  
+  dataFrameWithQualityDataOnly = dataFrame[dataFrame['wse_qual'] == 0] #<=
+  print(dataFrameWithQualityDataOnly.shape)
+  
+
+
+  
+  lon  = dataFrameWithQualityDataOnly['longitude'].to_numpy()
+  lat  = dataFrameWithQualityDataOnly['latitude'].to_numpy()
+  data = dataFrameWithQualityDataOnly['wse'].to_numpy()
+  
+
+  
+
+  
+  print(lon.min(), lon.max(), lon.shape)
+  print(lat.min(), lat.max(), lat.shape)
+  print(data.min(), data.max(), data.shape)
+  
+  
+  
+  fontsize = 16
+
+  # Plot figure
+  fig = plt.figure(figsize=(15,8))
+  projection=ccrs.PlateCarree()
+  crs=projection
+
+  ax = fig.add_subplot(projection=projection)
+  ax.set_extent([lon_min, lon_max, lat_min, lat_max])
+  
+  land = cfeature.NaturalEarthFeature('physical', 'land', '10m', edgecolor='face', facecolor='gray')
+  #ax.add_feature(land)
+  
+  norm = mpl.colors.Normalize(vmin = cbar_min, vmax = cbar_max)
+  plot = ax.scatter(lon, lat, c = data, s = 0.2, marker = "o", edgecolors='none', transform = projection, \
+                       cmap = cmap, norm = norm, \
+                       zorder = 1, rasterized = False)
+
+  plot = ax.scatter(lon2, lat2, c = data2, s = 0.2, marker = "o", edgecolors='none', transform = projection, \
+                      cmap = cmap, norm = norm, \
+                      zorder = 1, rasterized = False)
+
+
+
+ 
+  ax.grid(False) 
+  ax.set_facecolor("none")
+  
+  ax.set_title(title, fontsize = fontsize)
+  #ax.background_img(name='BM', resolution='high')
+  
+  # Colorbar
+  cbar = plt.colorbar(plot, ax = ax, extend = 'both',spacing = 'uniform', \
+                  orientation = 'horizontal', pad = 0.5, shrink = 0.6 )
+  cbar.ax.tick_params(labelsize = fontsize)
+  cbar.set_label('m')
+  fig.tight_layout()
+  
+  # if saveFigure:
+  fig.savefig(outputPlotFile, format='png', dpi = 2200., transparent=True)
+
+##########################################################################
+
+if __name__ == "__main__":
+  main()
