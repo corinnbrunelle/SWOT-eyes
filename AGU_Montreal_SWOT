@@ -4,7 +4,9 @@ Created on Thu Aug 15 16:30:04 2024
 
 @author: cbourgaultbrunelle
 """
-
+# input files :
+# SWOT_L2_HR_Raster_100m_UTM18T_N_x_x_x_019_369_118F_20240812T231648_20240812T231709_PIC0_01.nc
+# SWOT_L2_HR_Raster_100m_UTM18T_N_x_x_x_019_369_118F_20240812T231648_20240812T231709_PIC0_01.nc
 #!/usr/bin/env python
 
 import xarray
